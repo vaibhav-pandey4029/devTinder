@@ -6,6 +6,36 @@ const app = express();
 //This is the middleware we are adding to parse the JSON received from API request.body to JS Object so that it can be readed successfully beacuse if we will not add this them req.body will be undefined this middleware will be called each time when any route will get hit by users as we did not provided any path to it.
 app.use(express.json());
 
+
+//API to fetch the single user by emailId
+app.get("/user",async (req,res)=>{
+    try{
+        const user = await User.findOne({emailId:req.body.emailId});
+        if(!user){
+            res.status(404).send("User not found");
+        }else{
+            res.send(user)
+        }
+    }catch(err){
+        res.status(500).send("Something went wrong");
+    }
+})
+
+//API to fetch all the users for feed
+app.get("/feed", async (req,res)=>{
+    try {
+        const users = await User.find({});
+        if(users.length===0){
+            res.status(404).send("No user are present");
+        }else{
+            res.send(users);
+        }
+    } catch (error) {
+        res.status(500).send("Something went wrong");
+    }
+})
+
+//Signup API
 app.post("/signup",async (req,res)=>{
     // Create a dummy data object
     // const userObj = {
