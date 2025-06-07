@@ -1,9 +1,11 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
+const validator = require("validator")
 const {connectDB} = require("./config/database");
 const {User} = require("./model/user")
 const {validateSignUpData} = require("./utils/validators");
 const app = express();
+
 //This is the middleware we are adding to parse the JSON received from API request.body to JS Object so that it can be readed successfully beacuse if we will not add this them req.body will be undefined this middleware will be called each time when any route will get hit by users as we did not provided any path to it.
 app.use(express.json());
 
@@ -87,6 +89,28 @@ app.post("/signup",async (req,res)=>{
         res.status(400).send("Error while creating user"+error.message);
     }
 })
+
+//Login API
+app.post("/login",(async (req,res)=>{
+    try {
+        const {emailId,password} = req.body;
+        if(!validator.isEmail(emailId)){
+            throw new Error("Email is not valid");
+        }
+        const user = await User.findOne({emailId:emailId});
+        if(!user){
+            // throw new Error("Invalid Credentials");
+            res.status(404).send("Invalid credentials");
+        }
+        const isValidPassword = await bcrypt.compare(password,user.password);
+        if(!isValidPassword){
+            res.status(404).send("Invalid credentials");
+        }
+        res.send("LoggedIn successfully");
+    } catch (error) {
+        res.status(500).send("Error : "+error.message)
+    }
+}))
 
 connectDB().then(()=>{
     console.log("Database connected...");
