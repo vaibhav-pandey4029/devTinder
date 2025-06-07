@@ -6,6 +6,7 @@ const {connectDB} = require("./config/database");
 const {User} = require("./model/user")
 const {validateSignUpData} = require("./utils/validators");
 const cookieParser = require("cookie-parser");
+const {userAuth} = require("./middleware/auth");
 const app = express();
 
 //This is the middleware we are adding to parse the JSON received from API request.body to JS Object so that it can be readed successfully beacuse if we will not add this them req.body will be undefined this middleware will be called each time when any route will get hit by users as we did not provided any path to it.
@@ -74,16 +75,13 @@ app.get("/feed", async (req,res)=>{
 })
 
 //Profile API
-app.get('/profile',async (req,res)=>{
+app.get('/profile',userAuth,async (req,res)=>{
     //cookies will be undefined if we will not add cookie-parser middleware
     try {
-        const cookie = req.cookies;
-        const token = cookie.token;
-        const decodedToken = jwt.verify(token,"Vaibhav@92346je");
-        const user = await User.findById(decodedToken._id);
+        const user = req.user;
         res.send(user);
     } catch (error) {
-        res.send(500).send("Error: "+error.message);
+        res.status(500).send("Error: "+error.message);
     }
 })
 
@@ -124,7 +122,9 @@ app.post("/login",(async (req,res)=>{
         if(!isValidPassword){
             res.status(404).send("Invalid credentials");
         }
-        const token = jwt.sign({_id:user._id},"Vaibhav@92346je");
+        const token = jwt.sign({_id:user._id},"Vaibhav@92346je",{
+            expiresIn:'1d'
+        });
         console.log("token ",token)
         res.cookie('token',token);
         res.send("LoggedIn successfully");
