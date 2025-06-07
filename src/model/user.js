@@ -45,6 +45,7 @@ const userSchema = new mongoose.Schema({
     },
     photoURL:{
         type:String,
+        default:"https://www.w3schools.com/w3images/avatar6.png"
     },
     skills:{
         type:[String]
