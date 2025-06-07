@@ -33,10 +33,18 @@ app.delete("/user",async(req,res)=>{
 })
 
 //Update API 
-app.patch("/user", async (req,res)=>{
-    const userId = req.body.userId;
+app.patch("/user/:userId", async (req,res)=>{
+    const userId = req.params?.userId;
     const data = req.body;
     try {
+        //TODO: we can add more keys here which should not get changed
+        const NOT_ALLOWED_Updates = ["emailId","userId"];
+        const isUpdateAllowed = Object.keys(data).every((key)=>{
+            return !NOT_ALLOWED_Updates.includes(key)
+        });
+        if(!isUpdateAllowed){
+            throw new Error("Changing email Id is not Allowed");
+        }
         const user = await User.findByIdAndUpdate(userId,data,{returnDocument:"after",runValidators:true});
         res.send(user);
     } catch (error) {
