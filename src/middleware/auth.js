@@ -7,7 +7,7 @@ const userAuth = async (req,res,next)=>{
     if(!token){
         res.status(401).send("Token is invalid");
     }
-    const decodedToken = jwt.verify(token,"Vaibhav@92346je");
+    const decodedToken = jwt.verify(token,"Vaibhav@92346je"); 
     const {_id} = decodedToken;
     const user = await User.findById(_id);
     if(!user){

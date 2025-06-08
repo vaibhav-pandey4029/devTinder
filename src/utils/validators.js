@@ -11,8 +11,19 @@ const validateSignUpData = (req)=>{
     if(!validator.isStrongPassword(password)){
         throw new Error("Please enter strong password");
     }
+    
+}
+
+const validateProfileEditData = (req)=>{
+    const NOT_ALLOWED_Updates = ["emailId","password","userId"];
+    const data = req.body;
+    const isUpdateAllowed = Object.keys(data).every(
+    key => !NOT_ALLOWED_Updates.includes(key)
+);
+    return isUpdateAllowed;
 }
 
 module.exports={
-    validateSignUpData
+    validateSignUpData,
+    validateProfileEditData
 }
