@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const {authRouter} = require("./router/authRouter")
 const {profileRouter} = require("./router/profileRouter")
 const {userRouter} = require("./router/userRouter")
+const {requestRouter} = require("./router/requestRouter")
 const app = express();
 
 //This is the middleware we are adding to parse the JSON received from API request.body to JS Object so that it can be readed successfully beacuse if we will not add this them req.body will be undefined this middleware will be called each time when any route will get hit by users as we did not provided any path to it.
@@ -16,6 +17,7 @@ app.use(cookieParser());
 app.use("/",authRouter)
 app.use("/",profileRouter)
 app.use("/",userRouter)
+app.use("/",requestRouter)
 
 
 
