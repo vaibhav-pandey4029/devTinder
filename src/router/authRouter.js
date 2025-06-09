@@ -14,14 +14,13 @@ authRouter.post("/login",(async (req,res)=>{
         }
         const user = await User.findOne({emailId:emailId});
         if(!user){
-            res.status(404).send("Invalid credentials");
+            return res.status(404).send("Invalid credentials");
         }
-        const isValidPassword = user.validatePassword(password);
+        const isValidPassword = await user.validatePassword(password);
         if(!isValidPassword){
-            res.status(404).send("Invalid credentials");
+            return res.status(404).send("Invalid credentials");
         }
         const token = user.getJWT();
-        console.log("token ",token)
         res.cookie('token',token);
         res.send("LoggedIn successfully");
     } catch (error) {

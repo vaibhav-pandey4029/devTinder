@@ -1,6 +1,5 @@
 const express = require("express");
 const {connectDB} = require("./config/database");
-
 const cookieParser = require("cookie-parser");
 const {authRouter} = require("./router/authRouter")
 const {profileRouter} = require("./router/profileRouter")
@@ -18,8 +17,6 @@ app.use("/",authRouter)
 app.use("/",profileRouter)
 app.use("/",userRouter)
 app.use("/",requestRouter)
-
-
 
 connectDB().then(()=>{
     console.log("Database connected...");

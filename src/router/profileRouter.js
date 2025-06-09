@@ -1,3 +1,4 @@
+const bcrypt = require("bcrypt");
 const express = require("express");
 const profileRouter = express.Router();
 const {userAuth} = require("../middleware/auth");
@@ -19,7 +20,7 @@ profileRouter.get('/profile/view',userAuth,async (req,res)=>{
 profileRouter.patch("/profile/edit",userAuth,async (req,res)=>{
     try{
         if(!validateProfileEditData(req)){
-            res.status(400).send("Invalid Data to edit");
+            return res.status(400).send("Invalid Data to edit");
         }
         //TODO: check if profile url is present make sure it is valid url
         //Add validation so that skills array size should not exceed to some limit
@@ -37,21 +38,21 @@ profileRouter.patch("/profile/password",userAuth,async (req,res)=>{
     try {
         //check if current password entered is correct
         const {password,currentPassword,passwordConfirm} = req.body;
-        const user = await User.findById(req.body._id);
-        const isPasswordValid = user.validatePassword(currentPassword);
+        const user = req.user;
+        const isPasswordValid = await user.validatePassword(currentPassword);
         if(!isPasswordValid){
-            res.status(401).send("Password is invalid");
+            return res.status(401).send("Password is invalid");
         }
         //check if password matches with new password
         if(password!==passwordConfirm){
-            res.status(400).send("password not matching");
+            return res.status(400).send("password not matching");
         }
         //check if password is strong
         if(!validator.isStrongPassword(password)){
-            res.status(400).send("Please enter a strong password");
+            return res.status(400).send("Please enter a strong password");
         }
         const passwordHash = await bcrypt.hash(password,10);
-        user[password]=passwordHash;
+        user.password=passwordHash;
         await user.save();
         res.send("Password updated successfully");
     } catch (error) {

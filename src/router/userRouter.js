@@ -1,63 +1,77 @@
 const express = require("express");
 const userRouter = express.Router();
 const {User} = require("../model/user")
+const {userAuth} = require('../middleware/auth')
+const {ConnectionRequestModel} =require("../model/requests")
 
-//API to fetch the single user by emailId
-userRouter.get("/user",async (req,res)=>{
+//To fetch all the requests received by user
+userRouter.get("/user/requests/received",userAuth,async (req,res)=>{
     try{
-        const user = await User.findOne({emailId:req.body.emailId});
-        if(!user){
-            res.status(404).send("User not found");
-        }else{
-            res.send(user)
-        }
+        const user = req.user;
+        const connections = await ConnectionRequestModel.find({
+            status:"interested",    
+            toUserId:user._id
+        }).populate("fromUserId","firstName lastName")
+        res.json({
+            message:"Requests fetched Successfully",
+            data:connections
+        })
     }catch(err){
         res.status(500).send("Something went wrong"+error.message);
     }
 })
 
-//Delete User API
-userRouter.delete("/user",async(req,res)=>{
-    const userId = req.body.userId;
+//To fetch all the conections of the user
+userRouter.get("/user/connections",userAuth,async(req,res)=>{
     try {
-        const user = await User.findByIdAndDelete(userId);
-        res.send("User Deleted");
+        const loggedInUser = req.user;
+        const connections = await ConnectionRequestModel.find({
+            status:"accepted",
+            $or:[
+                {fromUserId:loggedInUser._id},
+                {toUserId:loggedInUser._id}
+            ]
+        }).populate("fromUserId","firstName lastName").populate("toUserId","firstName lastName");
+        const friendList = connections.map((data)=>{
+            if(data.fromUserId._id.equals(loggedInUser._id)){
+                return data.toUserId;
+            }
+            return data.fromUserId;
+        })
+        res.json({
+            message:"Friend List fetched",
+            data:friendList
+        })
     } catch (error) {
-        res.status(500).send("Error in deleting the user"+error.message);
+        
     }
 })
 
-//Update API 
-userRouter.patch("/user/:userId", async (req,res)=>{
-    const userId = req.params?.userId;
-    const data = req.body;
+// To fetch the feed of user
+userRouter.get("/user/feed",userAuth,async (req,res)=>{
     try {
-        //TODO: we can add more keys here which should not get changed
-        const NOT_ALLOWED_Updates = ["emailId","userId"];
-        const isUpdateAllowed = Object.keys(data).every((key)=>{
-            return !NOT_ALLOWED_Updates.includes(key)
-        });
-        if(!isUpdateAllowed){
-            throw new Error("Changing email Id is not Allowed");
-        }
-        const user = await User.findByIdAndUpdate(userId,data,{returnDocument:"after",runValidators:true});
-        res.send(user);
+        const limit = req.query.limit || 2;
+        const page = req.query.page||1;
+        const skip = (page-1)*limit;
+        const loggedInUser = req.user;
+        const connections = await ConnectionRequestModel.find({
+            $or:[
+                {fromUserId:loggedInUser._id},
+                {toUserId:loggedInUser._id}
+            ]
+        }).select("fromUserId toUserId");
+        const hideConnectionsFromFeed = new Set();
+        connections.forEach((item=>{
+            hideConnectionsFromFeed.add(item.fromUserId.toString());
+            hideConnectionsFromFeed.add(item.toUserId.toString());
+        }))
+        hideConnectionsFromFeed.add(loggedInUser._id.toString());
+        const feedData = await User.find({
+            _id:{$nin: Array.from(hideConnectionsFromFeed)}
+        }).skip(skip).limit(limit);
+        res.send(feedData);
     } catch (error) {
-        res.status(500).send("Error while updating the user"+error.message);
-    }
-})
-
-//API to fetch all the users for feed
-userRouter.get("/feed", async (req,res)=>{
-    try {
-        const users = await User.find({});
-        if(users.length===0){
-            res.status(404).send("No user are present");
-        }else{
-            res.send(users);
-        }
-    } catch (error) {
-        res.status(500).send("Something went wrong"+error.message);
+        res.status(500).send("Error: "+error.message)
     }
 })
 
