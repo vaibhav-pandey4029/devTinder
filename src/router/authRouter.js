@@ -22,7 +22,7 @@ authRouter.post("/login",(async (req,res)=>{
         }
         const token = user.getJWT();
         res.cookie('token',token);
-        res.send("LoggedIn successfully");
+        res.send(user.firstName+" "+user.lastName+" logged in successfully");
     } catch (error) {
         res.status(500).send("Error : "+error.message)
     }
