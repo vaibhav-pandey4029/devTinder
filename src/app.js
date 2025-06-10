@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const {connectDB} = require("./config/database");
 const cookieParser = require("cookie-parser");
 const {authRouter} = require("./router/authRouter")
@@ -7,6 +8,10 @@ const {userRouter} = require("./router/userRouter")
 const {requestRouter} = require("./router/requestRouter")
 const app = express();
 
+app.use(cors({
+    origin:"http:localhost:5173",
+    credentials:true
+}))
 //This is the middleware we are adding to parse the JSON received from API request.body to JS Object so that it can be readed successfully beacuse if we will not add this them req.body will be undefined this middleware will be called each time when any route will get hit by users as we did not provided any path to it.
 app.use(express.json());
 
